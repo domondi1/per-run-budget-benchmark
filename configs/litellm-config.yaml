@@ -1,0 +1,9 @@
+model_list:
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_base: http://127.0.0.1:9400/v1
+      api_key: bench
+general_settings:
+  master_key: sk-bench-master
+  database_url: postgresql://postgres:pw@127.0.0.1:5432/litellm

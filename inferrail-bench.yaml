@@ -1,0 +1,15 @@
+providers:
+  up:
+    type: openai_compatible
+    api_key_env: BENCH_KEY
+    base_url: http://127.0.0.1:9400/v1
+routes:
+  default: {provider: up, model: gpt-4o-mini}
+default_provider: up
+telemetry: {sink: none}
+receipts: {sink: sqlite, path: ./receipts.db}
+budgets: {enabled: true, path: ./budgets.db}
+pricing:
+  up:
+    gpt-4o-mini: {input_usd_per_million: "0.15", output_usd_per_million: "0.60", source: "bench (OpenAI list price)", verified_date: 2026-09-29}
+server: {host: 127.0.0.1, port: 8200}

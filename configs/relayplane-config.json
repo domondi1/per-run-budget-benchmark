@@ -1,0 +1,35 @@
+{
+ "telemetry_enabled": false,
+ "lifecycle_enabled": true,
+ "config_version": 4,
+ "mesh": {
+  "enabled": false,
+  "endpoint": "https://osmosis-mesh-dev.fly.dev",
+  "sync_interval_ms": 60000,
+  "contribute": false
+ },
+ "routing": {
+  "mode": "complexity",
+  "cascade": {
+   "enabled": false,
+   "models": [],
+   "escalateOn": "uncertainty",
+   "maxEscalations": 1
+  },
+  "complexity": {
+   "enabled": true,
+   "simple": "openai/gpt-4.1-mini",
+   "moderate": "openai/gpt-5.4",
+   "complex": "openai/gpt-5.4",
+   "elite": "openai/gpt-5.4"
+  }
+ },
+ "rateLimit": {
+  "models": {
+   "gpt-4o-mini": {
+    "rpm": 10000
+   }
+  },
+  "maxQueueDepth": 1000
+ }
+}
