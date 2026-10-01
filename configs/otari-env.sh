@@ -1,4 +1,4 @@
-# otari 0.4.0 (mzdotai/otari:latest @ sha256:8ca32c6c...), in-container SQLite, port 8300
+# otari 0.4.0 (mzdotai/otari:latest @ sha256:8ca32c6c..., source revision f36010557d576c979afaaa1ac6f0f732cedf7dd5), in-container SQLite, port 8300
 docker run -d --name bench-otari --network host -e OTARI_MASTER_KEY=sk-otari-bench -e OTARI_PORT=8300 -e OTARI_CONFIG_YAML='
 default_pricing: true
 port: 8300

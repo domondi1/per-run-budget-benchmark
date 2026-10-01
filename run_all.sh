@@ -10,10 +10,11 @@ INF046=${INF046:?venv with inferrail 0.4.6}; INF047=${INF047:?venv with inferrai
 run() { sys=$1; scope=$2; test=$3; shift 3; out=$("$PY" "$HERE/burst.py" --nonce "$@"); echo "{\"system\":\"$sys\",\"scope\":\"$scope\",\"test\":\"$test\",\"result\":$out}"; }
 matrix() { # $1 system  $2 scope  $3 function that prints fresh per-test args
   sys=$1; scope=$2; fresh=$3
-  a=$($fresh b); run "$sys" "$scope" burst30 $a --n 30; run "$sys" "$scope" wave2 $a --n 5
-  a=$($fresh s); run "$sys" "$scope" seq15 $a --n 15 --sequential
-  a=$($fresh sb); run "$sys" "$scope" stream_burst30 $a --n 30 --stream; run "$sys" "$scope" stream_wave2 $a --n 5 --stream
-  a=$($fresh ss); run "$sys" "$scope" stream_seq15 $a --n 15 --sequential --stream
+  # setup failures abort the run instead of measuring an unbudgeted request
+  a=$($fresh b) || { echo "setup failed: $sys $scope" >&2; exit 1; }; run "$sys" "$scope" burst30 $a --n 30; run "$sys" "$scope" wave2 $a --n 5
+  a=$($fresh s) || { echo "setup failed: $sys $scope" >&2; exit 1; }; run "$sys" "$scope" seq15 $a --n 15 --sequential
+  a=$($fresh sb) || { echo "setup failed: $sys $scope" >&2; exit 1; }; run "$sys" "$scope" stream_burst30 $a --n 30 --stream; run "$sys" "$scope" stream_wave2 $a --n 5 --stream
+  a=$($fresh ss) || { echo "setup failed: $sys $scope" >&2; exit 1; }; run "$sys" "$scope" stream_seq15 $a --n 15 --sequential --stream
 }
 TAG=$(date +%s)
 # Inferrail: per-work_id budget created with the CLI before each run.
@@ -24,11 +25,22 @@ infdecl() { echo "--url http://127.0.0.1:8212/v1/chat/completions --header X-Inf
 LM="Authorization: Bearer sk-bench-master"; CT="Content-Type: application/json"
 llkey() { k=$(curl -s -X POST localhost:4000/key/generate -H "$LM" -H "$CT" -d '{"max_budget":0.0045,"models":["gpt-4o-mini"]}' | "$PY" -c "import sys,json;print(json.load(sys.stdin)['key'])"); echo "--url http://127.0.0.1:4000/v1/chat/completions --key $k"; }
 LLPLAIN=$(curl -s -X POST localhost:4000/key/generate -H "$LM" -H "$CT" -d '{"models":["gpt-4o-mini"]}' | "$PY" -c "import sys,json;print(json.load(sys.stdin)['key'])")
-llcust() { id=c$TAG$1; curl -s -X POST localhost:4000/customer/new -H "$LM" -H "$CT" -d "{\"user_id\":\"$id\",\"max_budget\":0.0045}" >/dev/null; echo "--url http://127.0.0.1:4000/v1/chat/completions --key $LLPLAIN --extra {\"user\":\"$id\"}"; }
+llcust() { id=c$TAG$1  # fail closed: the customer must exist with its own $0.0045 budget before the burst
+  r=$(curl -sS --fail-with-body -X POST localhost:4000/customer/new -H "$LM" -H "$CT" -d "{\"user_id\":\"$id\",\"max_budget\":0.0045}") || { echo "customer/new failed: $r" >&2; return 1; }
+  "$PY" -c "import sys,json; d=json.loads(sys.argv[1]); assert d['user_id']=='$id' and d['litellm_budget_table']['max_budget']==0.0045, d" "$r" >&2 || return 1
+  echo "--url http://127.0.0.1:4000/v1/chat/completions --key $LLPLAIN --extra {\"user\":\"$id\"}"; }
 lldefault() { echo "--url http://127.0.0.1:4000/v1/chat/completions --key $LLPLAIN --extra {\"user\":\"d$TAG$1\"}"; }
 llsession() { echo "--url http://127.0.0.1:4000/v1/chat/completions --key $LLAGENTKEY --extra {\"metadata\":{\"session_id\":\"s$TAG$1\"}}"; }
 OM="Authorization: Bearer sk-otari-bench"
-otkey() { bid=$(curl -s -X POST localhost:8300/api/v1/budgets -H "$OM" -H "$CT" -d '{"max_budget":0.0045}' | "$PY" -c "import sys,json;d=json.load(sys.stdin);print(d.get('budget_id') or d.get('id'))"); kj=$(curl -s -X POST localhost:8300/api/v1/keys -H "$OM" -H "$CT" -d '{"key_name":"bench"}'); kid=$(echo "$kj" | "$PY" -c "import sys,json;print(json.load(sys.stdin)['id'])"); curl -s -X POST localhost:8300/api/v1/scoped-budgets -H "$OM" -H "$CT" -d "{\"scope_type\":\"api_token\",\"scope_id\":\"$kid\",\"budget_id\":\"$bid\"}" >/dev/null; k=$(echo "$kj" | "$PY" -c "import sys,json;print(json.load(sys.stdin)['key'])"); echo "--url http://127.0.0.1:8300/api/v1/chat/completions --key $k --model openai:gpt-4o-mini"; }
+otkey() {  # fail closed: budget, key and scoped budget must each return 2xx, and the ceiling must reference this key and budget
+  b=$(curl -sS --fail-with-body -X POST localhost:8300/api/v1/budgets -H "$OM" -H "$CT" -d '{"max_budget":0.0045}') || { echo "budget create failed: $b" >&2; return 1; }
+  bid=$("$PY" -c "import sys,json; print(json.loads(sys.argv[1])['budget_id'])" "$b") || return 1
+  kj=$(curl -sS --fail-with-body -X POST localhost:8300/api/v1/keys -H "$OM" -H "$CT" -d '{"key_name":"bench"}') || { echo "key create failed" >&2; return 1; }
+  kid=$("$PY" -c "import sys,json; print(json.loads(sys.argv[1])['id'])" "$kj") || return 1
+  sb=$(curl -sS --fail-with-body -X POST localhost:8300/api/v1/scoped-budgets -H "$OM" -H "$CT" -d "{\"scope_type\":\"api_token\",\"scope_id\":\"$kid\",\"budget_id\":\"$bid\"}") || { echo "scoped-budget create failed: $sb" >&2; return 1; }
+  "$PY" -c "import sys,json; d=json.loads(sys.argv[1]); assert d['scope_type']=='api_token' and d['scope_id']=='$kid' and d['budget_id']=='$bid' and d['max_budget']==0.0045, d" "$sb" >&2 || return 1
+  k=$("$PY" -c "import sys,json; print(json.loads(sys.argv[1])['key'])" "$kj") || return 1
+  echo "--url http://127.0.0.1:8300/api/v1/chat/completions --key $k --model openai:gpt-4o-mini"; }
 rp() { echo "--url http://127.0.0.1:4100/v1/chat/completions --key bench --header X-RelayPlane-Bypass:true --header X-RelayPlane-Run-Cap-Usd:0.0045 --header X-RelayPlane-Run:r$TAG$1"; }
 matrix inferrail-0.4.6 per_work_id inf046
 matrix inferrail-0.4.7 per_work_id inf047
