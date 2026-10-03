@@ -100,6 +100,7 @@ raw lines in [`results/`](results/), notes in
 | otari 0.4.0 | API token (pre-created; one fresh token per simulated job) | yes | none (SQLite in its container) | 3 API calls per token | 10 (+0) | 10 | 10 (+0) / 10 |
 | RelayPlane 1.9.69 | per run, header | no | none | 2 request headers | 30 (+0) | 10 | 30 (+0) / 10 |
 | RelayPlane 1.9.70 (rerun 2026-10-03) | per run, header | no | none | 2 request headers | 10 (+0) | 10 | 10 (+0) / 10 |
+| Bifrost 1.6.3 (2026-10-03) | virtual key, pre-created | yes | none (local config store) | 1 virtual key per run | 30 (+0) | 10 | 30 (+0) / 10 |
 | Pydantic AI (harness 0.36.0) | `SpendLimits`, in-process | no | none | code | 30 | 10 | not tested |
 
 **Update 2026-10-03:** RelayPlane's maintainer confirmed the 1.9.69 burst
@@ -111,6 +112,8 @@ changes: the cap now holds under the burst and under streams. Raw output:
 `results/raw-20261003T000300Z-relayplane-1.9.70.jsonl`. The Inferrail header row was
 also rerun on the current release, 0.4.11, with the same config: unchanged
 (`results/raw-20261003T000737Z-inferrail-0.4.11.jsonl`).
+
+**Bifrost (2026-10-03):** reported as [maximhq/bifrost#7870](https://github.com/maximhq/bifrost/issues/7870). The maintainer replied that this is a deliberate design choice: Bifrost does not estimate cost before the request, to avoid adding latency, and accepts roughly $10 of tolerance on budgets. Config and raw output: `configs/bifrost-*`, `results/raw-20261003T0150Z-bifrost-1.6.3.txt`.
 
 Machine summary of the same data: [`results/summary-*.md`](results/).
 
