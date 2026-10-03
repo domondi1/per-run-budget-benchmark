@@ -1,0 +1,130 @@
+{
+ "client": {
+  "enforce_auth_on_inference": true
+ },
+ "providers": {
+  "openai": {
+   "keys": [
+    {
+     "id": "k1",
+     "name": "k1",
+     "value": "env.OPENAI_API_KEY",
+     "models": [
+      "*"
+     ],
+     "weight": 1.0
+    }
+   ],
+   "network_config": {
+    "base_url": "http://127.0.0.1:9400",
+    "max_retries": 0
+   },
+   "concurrency_and_buffer_size": {
+    "concurrency": 200,
+    "buffer_size": 400
+   }
+  }
+ },
+ "governance": {
+  "virtual_keys": [
+   {
+    "id": "vk-b",
+    "name": "bench-b",
+    "value": "env.VK_B",
+    "is_active": true,
+    "provider_configs": [
+     {
+      "provider": "openai",
+      "allowed_models": [
+       "*"
+      ],
+      "key_ids": [
+       "*"
+      ],
+      "weight": 1
+     }
+    ]
+   },
+   {
+    "id": "vk-s",
+    "name": "bench-s",
+    "value": "env.VK_S",
+    "is_active": true,
+    "provider_configs": [
+     {
+      "provider": "openai",
+      "allowed_models": [
+       "*"
+      ],
+      "key_ids": [
+       "*"
+      ],
+      "weight": 1
+     }
+    ]
+   },
+   {
+    "id": "vk-sb",
+    "name": "bench-sb",
+    "value": "env.VK_SB",
+    "is_active": true,
+    "provider_configs": [
+     {
+      "provider": "openai",
+      "allowed_models": [
+       "*"
+      ],
+      "key_ids": [
+       "*"
+      ],
+      "weight": 1
+     }
+    ]
+   },
+   {
+    "id": "vk-ss",
+    "name": "bench-ss",
+    "value": "env.VK_SS",
+    "is_active": true,
+    "provider_configs": [
+     {
+      "provider": "openai",
+      "allowed_models": [
+       "*"
+      ],
+      "key_ids": [
+       "*"
+      ],
+      "weight": 1
+     }
+    ]
+   }
+  ],
+  "budgets": [
+   {
+    "id": "bud-b",
+    "max_limit": 0.0045,
+    "reset_duration": "1d",
+    "virtual_key_id": "vk-b"
+   },
+   {
+    "id": "bud-s",
+    "max_limit": 0.0045,
+    "reset_duration": "1d",
+    "virtual_key_id": "vk-s"
+   },
+   {
+    "id": "bud-sb",
+    "max_limit": 0.0045,
+    "reset_duration": "1d",
+    "virtual_key_id": "vk-sb"
+   },
+   {
+    "id": "bud-ss",
+    "max_limit": 0.0045,
+    "reset_duration": "1d",
+    "virtual_key_id": "vk-ss"
+   }
+  ]
+ }
+}

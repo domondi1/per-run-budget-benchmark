@@ -1,0 +1,7 @@
+bifrost 1.6.3, virtual-key budget $0.0045 (10 calls at true cost), fake upstream on :9400
+burst30        {"sent": 30, "status_codes": {"200": 30}, "upstream_calls": 30, "upstream_max_in_flight": 30, "upstream_cost_usd": 0.0135}
+wave2          {"sent": 5, "status_codes": {"402": 5}, "upstream_calls": 0}
+seq15          {"sent": 15, "status_codes": {"200": 10, "402": 5}, "upstream_calls": 10, "upstream_cost_usd": 0.0045}
+stream_burst30 {"sent": 30, "status_codes": {"200": 30}, "upstream_calls": 30, "upstream_max_in_flight": 30, "upstream_cost_usd": 0.0135}
+stream_wave2   {"sent": 5, "status_codes": {"402": 5}, "upstream_calls": 0}
+stream_seq15   {"sent": 15, "status_codes": {"200": 10, "402": 5}, "upstream_calls": 10, "upstream_cost_usd": 0.0045}
