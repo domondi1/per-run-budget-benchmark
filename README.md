@@ -89,6 +89,7 @@ raw lines in [`results/`](results/), notes in
 
 | System | Budget scope | Created before the run? | External database | Setup to protect one run | 30 at once (+5 more) | 15 one at a time | Streams, no usage requested: 30 at once (+5) / 15 one at a time |
 |---|---|---|---|---|---|---|---|
+| Inferrail 0.4.11 (current release, rerun 2026-10-03) | per run, header | no | none (SQLite file) | 2 request headers | 9 (+0) | 9 | 9 (+0) / 9 |
 | Inferrail 0.4.7 | per run, header | no | none (SQLite file) | 2 request headers | 9 (+0) | 9 | 9 (+0) / 9 |
 | Inferrail 0.4.7 | per run, CLI | yes | none (SQLite file) | 1 CLI call per run | 9 (+0) | 9 | 9 (+0) / 9 |
 | Inferrail 0.4.6 (previous release) | per run, CLI | yes | none (SQLite file) | 1 CLI call per run | 30 (+0) | 9 | 30 (+5) / 15 |
@@ -107,7 +108,9 @@ the response came back) and fixed it in 1.9.70 by reserving each request's
 estimated cost at admission ([issue #1](https://github.com/domondi1/per-run-budget-benchmark/issues/1)).
 We reran the RelayPlane row on 1.9.70 with the same harness and config, no
 changes: the cap now holds under the burst and under streams. Raw output:
-`results/raw-20261003T000300Z-relayplane-1.9.70.jsonl`.
+`results/raw-20261003T000300Z-relayplane-1.9.70.jsonl`. The Inferrail header row was
+also rerun on the current release, 0.4.11, with the same config: unchanged
+(`results/raw-20261003T000737Z-inferrail-0.4.11.jsonl`).
 
 Machine summary of the same data: [`results/summary-*.md`](results/).
 
