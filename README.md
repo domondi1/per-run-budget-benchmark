@@ -43,7 +43,7 @@ production scale, and no real provider is used.
 | Inferrail (previous release) | PyPI `inferrail==0.4.6` | per-run budget created with the CLI | same |
 | LiteLLM proxy | 1.103.0, `ghcr.io/berriai/litellm-database@sha256:f4f114b1996c5923c4d62a7bbdcecb2ccf9df17bdebce76050f609be97f75f5c` + `postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea` | (a) virtual-key `max_budget`; (b) pre-created customer `max_budget` (request `user`); (c) default budget for an unseen customer id (`max_end_user_budget_id`); (d) agent `max_budget_per_session` (request `metadata.session_id`) | [`configs/litellm-*`](configs/) |
 | otari | 0.4.0, `mzdotai/otari@sha256:8ca32c6c43b6f6c8f38df9dda6604ecdbd6e34f60148386e4ee83fe3f3756ad0`, image source revision `f36010557d576c979afaaa1ac6f0f732cedf7dd5` (built 2026-09-28; the `v0.4.0` git tag, `b39c5f0`, has an older budget model — `/scoped-budgets` comes from this newer source), in-container SQLite | budget scoped to one API token | [`configs/otari-env.sh`](configs/otari-env.sh) |
-| RelayPlane | `@relayplane/proxy` 1.9.69, Node v24.14.0 | per-run cap header `X-RelayPlane-Run-Cap-Usd` + `X-RelayPlane-Run` | [`configs/relayplane-*`](configs/) |
+| RelayPlane | `@relayplane/proxy` 1.9.69 (and 1.9.70 rerun), Node v24.14.0 | per-run cap header `X-RelayPlane-Run-Cap-Usd` + `X-RelayPlane-Run` | [`configs/relayplane-*`](configs/) |
 | Pydantic AI | `pydantic-ai-slim` 2.51.0, `pydantic-ai-harness` 0.36.0, `genai-prices` 0.1.9 | `SpendLimits` `Budget(window='total', scope='job-1')` | [`pydantic_ai_spendlimits.py`](pydantic_ai_spendlimits.py) |
 
 ### Setup details per budget scope
@@ -98,7 +98,16 @@ raw lines in [`results/`](results/), notes in
 | LiteLLM 1.103.0 | agent session | no (agent + key created once) | Postgres | none per run | 30 (+0) | 11 | 30 (+0) / 10 |
 | otari 0.4.0 | API token (pre-created; one fresh token per simulated job) | yes | none (SQLite in its container) | 3 API calls per token | 10 (+0) | 10 | 10 (+0) / 10 |
 | RelayPlane 1.9.69 | per run, header | no | none | 2 request headers | 30 (+0) | 10 | 30 (+0) / 10 |
+| RelayPlane 1.9.70 (rerun 2026-10-03) | per run, header | no | none | 2 request headers | 10 (+0) | 10 | 10 (+0) / 10 |
 | Pydantic AI (harness 0.36.0) | `SpendLimits`, in-process | no | none | code | 30 | 10 | not tested |
+
+**Update 2026-10-03:** RelayPlane's maintainer confirmed the 1.9.69 burst
+result was a bug (admission checked recorded spend and only recorded cost when
+the response came back) and fixed it in 1.9.70 by reserving each request's
+estimated cost at admission ([issue #1](https://github.com/domondi1/per-run-budget-benchmark/issues/1)).
+We reran the RelayPlane row on 1.9.70 with the same harness and config, no
+changes: the cap now holds under the burst and under streams. Raw output:
+`results/raw-20261003T000300Z-relayplane-1.9.70.jsonl`.
 
 Machine summary of the same data: [`results/summary-*.md`](results/).
 
